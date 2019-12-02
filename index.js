@@ -71,6 +71,17 @@ export class MixpanelInstance {
   }
 
   /*
+  Get a boolean twek
+  */
+ getShareTweak(): Promise<boolean> {
+  if (!this.initialized) {
+    return Promise.reject(new Error(uninitializedError('getShareTweak')))
+  }
+  if (!RNMixpanel.getShareTweak) throw new Error('No native implementation for getShareTweak.  This is Android only.')
+  return RNMixpanel.getShareTweak(this.apiToken)
+}
+
+  /*
   Gets the given super property.  Returns a promise that resolves to the value.
   */
   getSuperProperty(propertyName: string): Promise<mixed> {
@@ -293,6 +304,20 @@ export default {
         callback(null)
       })
   },
+
+  getShareTweak(callback: (share: ?boolean) => void) {
+    if (!defaultInstance) throw new Error(NO_INSTANCE_ERROR)
+
+    defaultInstance.getShareTweak()
+      .then((share: boolean) => {
+        callback(share)
+      })
+      .catch((err) => {
+        console.error('Error in mixpanel getShareTweak', err)
+        callback(null)
+      })
+  },
+
 
   getSuperProperty(propertyName: string, callback: (value: mixed) => void) {
     if (!defaultInstance) throw new Error(NO_INSTANCE_ERROR)

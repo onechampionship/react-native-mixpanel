@@ -1,5 +1,7 @@
 package com.kevinejohn.RNMixpanel;
 
+import android.util.Log;
+
 import com.facebook.react.bridge.LifecycleEventListener;
 import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReactApplicationContext;
@@ -10,6 +12,7 @@ import com.facebook.react.bridge.ReadableMap;
 import com.facebook.react.bridge.ReadableMapKeySetIterator;
 import com.facebook.react.bridge.ReadableType;
 import com.mixpanel.android.mpmetrics.MixpanelAPI;
+import com.mixpanel.android.mpmetrics.Tweak;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -26,6 +29,8 @@ import java.util.Map;
 public class RNMixpanelModule extends ReactContextBaseJavaModule implements LifecycleEventListener {
 
     private Map<String, MixpanelAPI> instances;
+
+    private static Tweak<Boolean> showShare = MixpanelAPI.booleanTweak("show_share",false);
 
     public RNMixpanelModule(ReactApplicationContext reactContext) {
         super(reactContext);
@@ -149,9 +154,10 @@ public class RNMixpanelModule extends ReactContextBaseJavaModule implements Life
             }
 
             final MixpanelAPI instance = MixpanelAPI.getInstance(reactApplicationContext,
-                                                                 token,
-                                                                 optOutTracking);
+                    token,
+                    optOutTracking);
 
+            instance.getPeople().joinExperimentIfAvailable();
             Map<String, MixpanelAPI> newInstances = new HashMap<>();
             if (instances != null) {
                 newInstances.putAll(instances);
@@ -308,6 +314,19 @@ public class RNMixpanelModule extends ReactContextBaseJavaModule implements Life
         }
     }
 
+    @ReactMethod
+    public void getShareTweak(final String apiToken, Promise promise){
+        final MixpanelAPI instance = getInstance(apiToken);
+        if (instance == null) {
+            promise.reject(new Throwable("no mixpanel instance available."));
+            return;
+        }
+        synchronized(instance) {
+            Log.e("MixPanel_ONE","value:"+showShare.get());
+            boolean value = showShare.get();
+            promise.resolve(value);
+        }
+    }
     // Android only
     @ReactMethod
     public void setPushRegistrationId(final String token, final String apiToken, Promise promise) {
