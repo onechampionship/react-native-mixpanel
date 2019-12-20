@@ -289,6 +289,17 @@ RCT_EXPORT_METHOD(union:(NSString *)name
     resolve(nil);
 }
 
+// People remove
+RCT_EXPORT_METHOD(remove:(NSString *)name
+                  property:(NSString *)property
+                  apiToken:(NSString *)apiToken
+                  resolve:(RCTPromiseResolveBlock)resolve
+                  reject:(RCTPromiseRejectBlock)reject) {
+    NSDictionary *dict = [NSDictionary dictionaryWithObjectsAndKeys: property, name, nil];
+    [[self getInstance:apiToken].people remove:dict];
+    resolve(nil);
+}
+
 // People append
 RCT_EXPORT_METHOD(append:(NSString *)name
                   properties:(NSArray *)properties

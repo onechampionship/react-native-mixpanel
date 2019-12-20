@@ -381,6 +381,16 @@ public class RNMixpanelModule extends ReactContextBaseJavaModule implements Life
     }
 
     @ReactMethod
+    public void remove(final String name, final String property, final String apiToken, Promise promise) {
+
+        final MixpanelAPI instance = getInstance(apiToken);
+        synchronized(instance) {
+            instance.getPeople().remove(name, property);
+        }
+        promise.resolve(null);
+    }
+
+    @ReactMethod
     public void append(final String name, final ReadableArray properties, final String apiToken, Promise promise) {
         JSONArray obj = null;
         try {

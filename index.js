@@ -1,14 +1,18 @@
 // @flow
-'use strict'
-import { NativeModules, Platform } from 'react-native'
-const { RNMixpanel } = NativeModules
+"use strict";
+import { NativeModules, Platform } from "react-native";
+const { RNMixpanel } = NativeModules;
 
 /*
 An error that is thrown or promise.rejected when a function is invoked before initialize() has completed.
 */
-const NO_INSTANCE_ERROR = 'No mixpanel instance created yet.  You must call sharedInstanceWithToken(token) or MixPanelInstance.initialize(token) before anything else and should wait for its promise to fulfill before others calls to avoid any internal native issue.'
-const uninitializedError: (string) => Error = (method: string) => new Error(`Mixpanel instance was not initialized yet.  Please run initialize() and wait for its promise to resolve before calling ${method}(...)`)
-let defaultInstance:?MixpanelInstance = null
+const NO_INSTANCE_ERROR =
+  "No mixpanel instance created yet.  You must call sharedInstanceWithToken(token) or MixPanelInstance.initialize(token) before anything else and should wait for its promise to fulfill before others calls to avoid any internal native issue.";
+const uninitializedError: string => Error = (method: string) =>
+  new Error(
+    `Mixpanel instance was not initialized yet.  Please run initialize() and wait for its promise to resolve before calling ${method}(...)`
+  );
+let defaultInstance: ?MixpanelInstance = null;
 
 /*
 A Mixpanel target.  Normally there is only one of these.  If you want to log to multiple Mixpanel projects, you can create a new instance of this class with a unique name.  Then call initiaze and you can start logging.
@@ -16,36 +20,49 @@ Most of the functions, like track and alias return a Promise.  The functions wil
 However since React Native makes no guarantees about whether native methods are called in order, if you want to be 100% sure everything will work, like calling identify() before track(), you should await those promises to ensure everything is called properly.
 */
 export class MixpanelInstance {
-  apiToken: ?string
-  optOutTrackingDefault: boolean
-  trackCrashes: boolean
-  automaticPushTracking: boolean
-  launchOptions: object
-  initialized: boolean
+  apiToken: ?string;
+  optOutTrackingDefault: boolean;
+  trackCrashes: boolean;
+  automaticPushTracking: boolean;
+  launchOptions: object;
+  initialized: boolean;
 
-  constructor(apiToken: ?string, optOutTrackingDefault: ?boolean = false, trackCrashes: ?boolean = true, automaticPushTracking: ?boolean = true, launchOptions: ?Object = null) {
-    this.apiToken = apiToken
-    this.optOutTrackingDefault = optOutTrackingDefault
-    this.trackCrashes = trackCrashes
-    this.automaticPushTracking = automaticPushTracking
-    this.launchOptions = launchOptions
-    this.initialized = false
+  constructor(
+    apiToken: ?string,
+    optOutTrackingDefault: ?boolean = false,
+    trackCrashes: ?boolean = true,
+    automaticPushTracking: ?boolean = true,
+    launchOptions: ?Object = null
+  ) {
+    this.apiToken = apiToken;
+    this.optOutTrackingDefault = optOutTrackingDefault;
+    this.trackCrashes = trackCrashes;
+    this.automaticPushTracking = automaticPushTracking;
+    this.launchOptions = launchOptions;
+    this.initialized = false;
   }
 
   /*
   Initializes the instance in native land.  Returns a promise that resolves when the instance has been created and is ready for use.
   */
   initialize(): Promise<void> {
-    if (Platform.OS === 'ios'){
-      return RNMixpanel.sharedInstanceWithToken(this.apiToken, this.optOutTrackingDefault, this.trackCrashes, this.automaticPushTracking, this.launchOptions)
-      .then(() => {
-        this.initialized = true
-      })
+    if (Platform.OS === "ios") {
+      return RNMixpanel.sharedInstanceWithToken(
+        this.apiToken,
+        this.optOutTrackingDefault,
+        this.trackCrashes,
+        this.automaticPushTracking,
+        this.launchOptions
+      ).then(() => {
+        this.initialized = true;
+      });
     } else {
-      return RNMixpanel.sharedInstanceWithToken(this.apiToken, this.optOutTrackingDefault)
-      .then(() => {
-        this.initialized = true
-      })
+      return RNMixpanel.sharedInstanceWithToken(
+        this.apiToken,
+        this.optOutTrackingDefault
+      ).then(() => {
+        this.initialized = true;
+      });
     }
   }
 
@@ -54,20 +71,25 @@ export class MixpanelInstance {
   */
   getDistinctId(): Promise<string> {
     if (!this.initialized) {
-      return Promise.reject(new Error(uninitializedError('getDistinctId')))
+      return Promise.reject(new Error(uninitializedError("getDistinctId")));
     }
-    return RNMixpanel.getDistinctId(this.apiToken)
+    return RNMixpanel.getDistinctId(this.apiToken);
   }
 
   /*
   Retrieves current Firebase Cloud Messaging token.
   */
- getPushRegistrationId(): Promise<string> {
+  getPushRegistrationId(): Promise<string> {
     if (!this.initialized) {
-      return Promise.reject(new Error(uninitializedError('getPushRegistrationId')))
+      return Promise.reject(
+        new Error(uninitializedError("getPushRegistrationId"))
+      );
     }
-    if (!RNMixpanel.getPushRegistrationId) throw new Error('No native implementation for getPushRegistrationId.  This is Android only.')
-    return RNMixpanel.getPushRegistrationId(this.apiToken)
+    if (!RNMixpanel.getPushRegistrationId)
+      throw new Error(
+        "No native implementation for getPushRegistrationId.  This is Android only."
+      );
+    return RNMixpanel.getPushRegistrationId(this.apiToken);
   }
 
   /*
@@ -75,174 +97,203 @@ export class MixpanelInstance {
   */
   getSuperProperty(propertyName: string): Promise<mixed> {
     if (!this.initialized) {
-      return Promise.reject(new Error(uninitializedError('getSuperProperty')))
+      return Promise.reject(new Error(uninitializedError("getSuperProperty")));
     }
-    return RNMixpanel.getSuperProperty(propertyName, this.apiToken)
+    return RNMixpanel.getSuperProperty(propertyName, this.apiToken);
   }
 
   /*
   Logs the event.
   */
   track(event: string, properties?: Object): Promise<void> {
-    if (!this.initialized) throw new Error(uninitializedError('track'))
+    if (!this.initialized) throw new Error(uninitializedError("track"));
     if (properties) {
-      return RNMixpanel.trackWithProperties(event, properties, this.apiToken)
+      return RNMixpanel.trackWithProperties(event, properties, this.apiToken);
     } else {
-      return RNMixpanel.track(event, this.apiToken)
+      return RNMixpanel.track(event, this.apiToken);
     }
   }
 
   flush(): Promise<void> {
-    if (!this.initialized) throw new Error(uninitializedError('flush'))
-    return RNMixpanel.flush(this.apiToken)
+    if (!this.initialized) throw new Error(uninitializedError("flush"));
+    return RNMixpanel.flush(this.apiToken);
   }
 
   disableIpAddressGeolocalization(): Promise<void> {
-    if (!this.initialized) throw new Error(uninitializedError('disableIpAddressGeolocalization'))
-    return RNMixpanel.disableIpAddressGeolocalization(this.apiToken)
+    if (!this.initialized)
+      throw new Error(uninitializedError("disableIpAddressGeolocalization"));
+    return RNMixpanel.disableIpAddressGeolocalization(this.apiToken);
   }
 
   alias(alias: string): Promise<void> {
-    if (!this.initialized) throw new Error(uninitializedError('createAlias'))
+    if (!this.initialized) throw new Error(uninitializedError("createAlias"));
 
-    return RNMixpanel.createAlias(alias, this.apiToken)
+    return RNMixpanel.createAlias(alias, this.apiToken);
   }
 
   identify(userId: string): Promise<void> {
-    if (!this.initialized) throw new Error(uninitializedError('identify'))
+    if (!this.initialized) throw new Error(uninitializedError("identify"));
 
-    return RNMixpanel.identify(userId, this.apiToken)
+    return RNMixpanel.identify(userId, this.apiToken);
   }
 
   timeEvent(event: string): Promise<void> {
-    if (!this.initialized) throw new Error(uninitializedError('timeEvent'))
+    if (!this.initialized) throw new Error(uninitializedError("timeEvent"));
 
-    return RNMixpanel.timeEvent(event, this.apiToken)
+    return RNMixpanel.timeEvent(event, this.apiToken);
   }
 
   registerSuperProperties(properties: Object): Promise<void> {
-    if (!this.initialized) throw new Error(uninitializedError('registerSuperProperties'))
+    if (!this.initialized)
+      throw new Error(uninitializedError("registerSuperProperties"));
 
-    return RNMixpanel.registerSuperProperties(properties, this.apiToken)
+    return RNMixpanel.registerSuperProperties(properties, this.apiToken);
   }
 
   registerSuperPropertiesOnce(properties: Object): Promise<void> {
-    if (!this.initialized) throw new Error(uninitializedError('registerSuperPropertiesOnce'))
+    if (!this.initialized)
+      throw new Error(uninitializedError("registerSuperPropertiesOnce"));
 
-    return RNMixpanel.registerSuperPropertiesOnce(properties, this.apiToken)
+    return RNMixpanel.registerSuperPropertiesOnce(properties, this.apiToken);
   }
 
   clearSuperProperties(): Promise<void> {
-    if (!this.initialized) throw new Error(uninitializedError('clearSuperProperties'))
-    return RNMixpanel.clearSuperProperties(this.apiToken)
+    if (!this.initialized)
+      throw new Error(uninitializedError("clearSuperProperties"));
+    return RNMixpanel.clearSuperProperties(this.apiToken);
   }
 
   initPushHandling(token: string): Promise<void> {
-    if (!this.initialized) throw new Error(uninitializedError('initPushHandling'))
+    if (!this.initialized)
+      throw new Error(uninitializedError("initPushHandling"));
 
-    return RNMixpanel.initPushHandling(token, this.apiToken)
+    return RNMixpanel.initPushHandling(token, this.apiToken);
   }
 
   set(properties: Object): Promise<void> {
-    if (!this.initialized) throw new Error(uninitializedError('set'))
+    if (!this.initialized) throw new Error(uninitializedError("set"));
 
-    return RNMixpanel.set(properties, this.apiToken)
+    return RNMixpanel.set(properties, this.apiToken);
   }
 
   setOnce(properties: Object): Promise<void> {
-    if (!this.initialized) throw new Error(uninitializedError('setOnce'))
+    if (!this.initialized) throw new Error(uninitializedError("setOnce"));
 
-    return RNMixpanel.setOnce(properties, this.apiToken)
+    return RNMixpanel.setOnce(properties, this.apiToken);
   }
 
   trackCharge(charge: number): Promise<void> {
-    if (!this.initialized) throw new Error(uninitializedError('trackCharge'))
+    if (!this.initialized) throw new Error(uninitializedError("trackCharge"));
 
-    return RNMixpanel.trackCharge(charge, this.apiToken)
+    return RNMixpanel.trackCharge(charge, this.apiToken);
   }
 
   trackChargeWithProperties(charge: number, properties: Object): Promise<void> {
-    if (!this.initialized) throw new Error(uninitializedError('trackChargeWithProperties'))
+    if (!this.initialized)
+      throw new Error(uninitializedError("trackChargeWithProperties"));
 
-    return RNMixpanel.trackChargeWithProperties(charge, properties, this.apiToken)
+    return RNMixpanel.trackChargeWithProperties(
+      charge,
+      properties,
+      this.apiToken
+    );
   }
 
   increment(property: string, by: number): Promise<void> {
-    if (!this.initialized) throw new Error(uninitializedError('increment'))
+    if (!this.initialized) throw new Error(uninitializedError("increment"));
 
-    return RNMixpanel.increment(property, by, this.apiToken)
+    return RNMixpanel.increment(property, by, this.apiToken);
   }
 
   union(name: string, properties: any[]): Promise<void> {
-    if (!this.initialized) throw new Error(uninitializedError('union'))
+    if (!this.initialized) throw new Error(uninitializedError("union"));
 
-    return RNMixpanel.union(name, properties, this.apiToken)
+    return RNMixpanel.union(name, properties, this.apiToken);
+  }
+
+  remove(name: string, property: string): Promise<void> {
+    if (!this.initialized) throw new Error(uninitializedError("remove"));
+
+    return RNMixpanel.remove(name, property, this.apiToken);
   }
 
   append(name: string, properties: any[]): Promise<void> {
-    if (!this.initialized) throw new Error(uninitializedError('append'))
+    if (!this.initialized) throw new Error(uninitializedError("append"));
 
-    return RNMixpanel.append(name, properties, this.apiToken)
+    return RNMixpanel.append(name, properties, this.apiToken);
   }
 
   removePushDeviceToken(pushDeviceToken: string): Promise<void> {
-    if (!this.initialized) throw new Error(uninitializedError('removePushDeviceToken'))
+    if (!this.initialized)
+      throw new Error(uninitializedError("removePushDeviceToken"));
 
-    return RNMixpanel.removePushDeviceToken(pushDeviceToken, this.apiToken)
+    return RNMixpanel.removePushDeviceToken(pushDeviceToken, this.apiToken);
   }
 
   removeAllPushDeviceTokens(): Promise<void> {
-    if (!this.initialized) throw new Error(uninitializedError('removeAllPushDeviceTokens'))
+    if (!this.initialized)
+      throw new Error(uninitializedError("removeAllPushDeviceTokens"));
 
-    return RNMixpanel.removeAllPushDeviceTokens(this.apiToken)
+    return RNMixpanel.removeAllPushDeviceTokens(this.apiToken);
   }
 
   addPushDeviceToken(token: string): Promise<void> {
-    if (!this.initialized) throw new Error(uninitializedError('addPushDeviceToken'))
+    if (!this.initialized)
+      throw new Error(uninitializedError("addPushDeviceToken"));
 
-    return RNMixpanel.addPushDeviceToken(token, this.apiToken)
+    return RNMixpanel.addPushDeviceToken(token, this.apiToken);
   }
 
   // android only
   setPushRegistrationId(token: string): Promise<void> {
-    if (!this.initialized) throw new Error(uninitializedError('setPushRegistrationId'))
+    if (!this.initialized)
+      throw new Error(uninitializedError("setPushRegistrationId"));
 
-    if (!RNMixpanel.setPushRegistrationId) throw new Error('No native implementation for setPushRegistrationId.  This is Android only.')
-    return RNMixpanel.setPushRegistrationId(token, this.apiToken)
+    if (!RNMixpanel.setPushRegistrationId)
+      throw new Error(
+        "No native implementation for setPushRegistrationId.  This is Android only."
+      );
+    return RNMixpanel.setPushRegistrationId(token, this.apiToken);
   }
 
   // android only
   clearPushRegistrationId(token?: string): Promise<void> {
-    if (!this.initialized) throw new Error(uninitializedError('clearPushRegistrationId'))
+    if (!this.initialized)
+      throw new Error(uninitializedError("clearPushRegistrationId"));
 
-    if (!RNMixpanel.clearPushRegistrationId) throw new Error('No native implementation for setPusclearPushRegistrationIdhRegistrationId.  This is Android only.')
-    return RNMixpanel.clearPushRegistrationId(token, this.apiToken)
+    if (!RNMixpanel.clearPushRegistrationId)
+      throw new Error(
+        "No native implementation for setPusclearPushRegistrationIdhRegistrationId.  This is Android only."
+      );
+    return RNMixpanel.clearPushRegistrationId(token, this.apiToken);
   }
 
   reset(): Promise<void> {
-    if (!this.initialized) throw new Error(uninitializedError('reset'))
+    if (!this.initialized) throw new Error(uninitializedError("reset"));
 
-    return RNMixpanel.reset(this.apiToken)
+    return RNMixpanel.reset(this.apiToken);
   }
 
   showInAppMessageIfAvailable(): Promise<void> {
-    if (!this.initialized) throw uninitializedError('showNotificationIfAvailable')
+    if (!this.initialized)
+      throw uninitializedError("showNotificationIfAvailable");
 
     if (Platform.OS === "android") {
-        return RNMixpanel.showNotificationIfAvailable(this.apiToken)
+      return RNMixpanel.showNotificationIfAvailable(this.apiToken);
     } else {
-        return RNMixpanel.showNotification(this.apiToken)
+      return RNMixpanel.showNotification(this.apiToken);
     }
   }
 
   optInTracking(): Promise<void> {
-    if (!this.initialized) throw new Error(uninitializedError('optInTracking'))
-    return RNMixpanel.optInTracking(this.apiToken)
+    if (!this.initialized) throw new Error(uninitializedError("optInTracking"));
+    return RNMixpanel.optInTracking(this.apiToken);
   }
 
   optOutTracking(): Promise<void> {
-    if (!this.initialized) throw new Error(uninitializedError('optOutTracking'))
-    return RNMixpanel.optOutTracking(this.apiToken)
+    if (!this.initialized)
+      throw new Error(uninitializedError("optOutTracking"));
+    return RNMixpanel.optOutTracking(this.apiToken);
   }
 }
 
@@ -255,218 +306,232 @@ mixpanel.track('my event')
 ```
 */
 export default {
-
-  sharedInstanceWithToken(apiToken: string, optOutTrackingDefault: ?boolean = false, trackCrashes: ?boolean = true, automaticPushTracking: ?boolean = true, launchOptions: ?Object = null): Promise<void> {
-    const instance = new MixpanelInstance(apiToken, optOutTrackingDefault)
-    if (!defaultInstance) defaultInstance = instance
-    return instance.initialize()
+  sharedInstanceWithToken(
+    apiToken: string,
+    optOutTrackingDefault: ?boolean = false,
+    trackCrashes: ?boolean = true,
+    automaticPushTracking: ?boolean = true,
+    launchOptions: ?Object = null
+  ): Promise<void> {
+    const instance = new MixpanelInstance(apiToken, optOutTrackingDefault);
+    if (!defaultInstance) defaultInstance = instance;
+    return instance.initialize();
   },
 
   /*
   Gets the unique instance for a user.  If you want to use promises, use the MixpanelInstace class API instead.
   */
   getDistinctId(callback: (id: ?string) => void) {
-    if (!defaultInstance) throw new Error(NO_INSTANCE_ERROR)
+    if (!defaultInstance) throw new Error(NO_INSTANCE_ERROR);
 
-    defaultInstance.getDistinctId()
+    defaultInstance
+      .getDistinctId()
       .then((id: string) => {
-        callback(id)
+        callback(id);
       })
-      .catch((err) => {
-        console.error('Error in mixpanel getDistinctId', err)
-        callback(null)
-      })
+      .catch(err => {
+        console.error("Error in mixpanel getDistinctId", err);
+        callback(null);
+      });
   },
 
   /*
   Retrieves current Firebase Cloud Messaging token.
   */
   getPushRegistrationId(callback: (token: ?string) => void) {
-    if (!defaultInstance) throw new Error(NO_INSTANCE_ERROR)
+    if (!defaultInstance) throw new Error(NO_INSTANCE_ERROR);
 
-    defaultInstance.getPushRegistrationId()
+    defaultInstance
+      .getPushRegistrationId()
       .then((token: string) => {
-        callback(token)
+        callback(token);
       })
-      .catch((err) => {
-        console.error('Error in mixpanel getPushRegistrationId', err)
-        callback(null)
-      })
+      .catch(err => {
+        console.error("Error in mixpanel getPushRegistrationId", err);
+        callback(null);
+      });
   },
 
   getSuperProperty(propertyName: string, callback: (value: mixed) => void) {
-    if (!defaultInstance) throw new Error(NO_INSTANCE_ERROR)
+    if (!defaultInstance) throw new Error(NO_INSTANCE_ERROR);
 
-    defaultInstance.getSuperProperty(propertyName)
+    defaultInstance
+      .getSuperProperty(propertyName)
       .then((value: mixed) => {
-        callback(value)
+        callback(value);
       })
-      .catch((err) => {
-        console.error('Error in mixpanel getSuperProperty', err)
-        callback(null)
-      })
+      .catch(err => {
+        console.error("Error in mixpanel getSuperProperty", err);
+        callback(null);
+      });
   },
 
   track(event: string) {
-    if (!defaultInstance) throw new Error(NO_INSTANCE_ERROR)
+    if (!defaultInstance) throw new Error(NO_INSTANCE_ERROR);
 
-    defaultInstance.track(event)
+    defaultInstance.track(event);
   },
 
   trackWithProperties(event: string, properties: Object) {
-    if (!defaultInstance) throw new Error(NO_INSTANCE_ERROR)
+    if (!defaultInstance) throw new Error(NO_INSTANCE_ERROR);
 
-    defaultInstance.track(event, properties)
+    defaultInstance.track(event, properties);
   },
 
   flush() {
-    if (!defaultInstance) throw new Error(NO_INSTANCE_ERROR)
+    if (!defaultInstance) throw new Error(NO_INSTANCE_ERROR);
 
-    defaultInstance.flush()
+    defaultInstance.flush();
   },
 
   disableIpAddressGeolocalization() {
-      if (!defaultInstance) throw new Error(NO_INSTANCE_ERROR)
+    if (!defaultInstance) throw new Error(NO_INSTANCE_ERROR);
 
-      defaultInstance.disableIpAddressGeolocalization()
+    defaultInstance.disableIpAddressGeolocalization();
   },
 
   createAlias(alias: string) {
-    if (!defaultInstance) throw new Error(NO_INSTANCE_ERROR)
+    if (!defaultInstance) throw new Error(NO_INSTANCE_ERROR);
 
-    defaultInstance.alias(alias)
+    defaultInstance.alias(alias);
   },
 
   identify(userId: string) {
-    if (!defaultInstance) throw new Error(NO_INSTANCE_ERROR)
+    if (!defaultInstance) throw new Error(NO_INSTANCE_ERROR);
 
-    defaultInstance.identify(userId)
+    defaultInstance.identify(userId);
   },
 
   timeEvent(event: string) {
-    if (!defaultInstance) throw new Error(NO_INSTANCE_ERROR)
+    if (!defaultInstance) throw new Error(NO_INSTANCE_ERROR);
 
-    defaultInstance.timeEvent(event)
+    defaultInstance.timeEvent(event);
   },
 
   registerSuperProperties(properties: Object) {
-    if (!defaultInstance) throw new Error(NO_INSTANCE_ERROR)
+    if (!defaultInstance) throw new Error(NO_INSTANCE_ERROR);
 
-    defaultInstance.registerSuperProperties(properties)
+    defaultInstance.registerSuperProperties(properties);
   },
 
   registerSuperPropertiesOnce(properties: Object) {
-    if (!defaultInstance) throw new Error(NO_INSTANCE_ERROR)
+    if (!defaultInstance) throw new Error(NO_INSTANCE_ERROR);
 
-    defaultInstance.registerSuperPropertiesOnce(properties)
+    defaultInstance.registerSuperPropertiesOnce(properties);
   },
 
   clearSuperProperties() {
-    if (!defaultInstance) throw new Error(NO_INSTANCE_ERROR)
+    if (!defaultInstance) throw new Error(NO_INSTANCE_ERROR);
 
-    defaultInstance.clearSuperProperties()
+    defaultInstance.clearSuperProperties();
   },
 
   initPushHandling(token: string) {
-    if (!defaultInstance) throw new Error(NO_INSTANCE_ERROR)
+    if (!defaultInstance) throw new Error(NO_INSTANCE_ERROR);
 
-    defaultInstance.initPushHandling(token)
+    defaultInstance.initPushHandling(token);
   },
 
   set(properties: Object) {
-    if (!defaultInstance) throw new Error(NO_INSTANCE_ERROR)
+    if (!defaultInstance) throw new Error(NO_INSTANCE_ERROR);
 
-    defaultInstance.set(properties)
+    defaultInstance.set(properties);
   },
 
   setOnce(properties: Object) {
-    if (!defaultInstance) throw new Error(NO_INSTANCE_ERROR)
+    if (!defaultInstance) throw new Error(NO_INSTANCE_ERROR);
 
-    defaultInstance.setOnce(properties)
+    defaultInstance.setOnce(properties);
   },
 
   removePushDeviceToken(pushDeviceToken: string) {
-    if (!defaultInstance) throw new Error(NO_INSTANCE_ERROR)
+    if (!defaultInstance) throw new Error(NO_INSTANCE_ERROR);
 
-    defaultInstance.removePushDeviceToken(pushDeviceToken)
+    defaultInstance.removePushDeviceToken(pushDeviceToken);
   },
 
   removeAllPushDeviceTokens() {
-    if (!defaultInstance) throw new Error(NO_INSTANCE_ERROR)
+    if (!defaultInstance) throw new Error(NO_INSTANCE_ERROR);
 
-    defaultInstance.removeAllPushDeviceTokens()
+    defaultInstance.removeAllPushDeviceTokens();
   },
 
   trackCharge(charge: number) {
-    if (!defaultInstance) throw new Error(NO_INSTANCE_ERROR)
+    if (!defaultInstance) throw new Error(NO_INSTANCE_ERROR);
 
-    defaultInstance.trackCharge(charge)
+    defaultInstance.trackCharge(charge);
   },
 
   trackChargeWithProperties(charge: number, properties: Object) {
-    if (!defaultInstance) throw new Error(NO_INSTANCE_ERROR)
+    if (!defaultInstance) throw new Error(NO_INSTANCE_ERROR);
 
-    defaultInstance.trackChargeWithProperties(charge, properties)
+    defaultInstance.trackChargeWithProperties(charge, properties);
   },
 
   increment(property: string, by: number) {
-    if (!defaultInstance) throw new Error(NO_INSTANCE_ERROR)
+    if (!defaultInstance) throw new Error(NO_INSTANCE_ERROR);
 
-    defaultInstance.increment(property, by)
+    defaultInstance.increment(property, by);
   },
 
   union(name: string, properties: any[]) {
-    if (!defaultInstance) throw new Error(NO_INSTANCE_ERROR)
+    if (!defaultInstance) throw new Error(NO_INSTANCE_ERROR);
 
-    defaultInstance.union(name, properties)
+    defaultInstance.union(name, properties);
+  },
+
+  remove(name: string, property: string) {
+    if (!defaultInstance) throw new Error(NO_INSTANCE_ERROR);
+
+    defaultInstance.remove(name, property);
   },
 
   append(name: string, properties: any[]) {
-    if (!defaultInstance) throw new Error(NO_INSTANCE_ERROR)
+    if (!defaultInstance) throw new Error(NO_INSTANCE_ERROR);
 
-    defaultInstance.append(name, properties)
+    defaultInstance.append(name, properties);
   },
 
   addPushDeviceToken(token: string) {
-    if (!defaultInstance) throw new Error(NO_INSTANCE_ERROR)
+    if (!defaultInstance) throw new Error(NO_INSTANCE_ERROR);
 
-    defaultInstance.addPushDeviceToken(token)
+    defaultInstance.addPushDeviceToken(token);
   },
 
   // android only
   setPushRegistrationId(token: string) {
-    if (!defaultInstance) throw new Error(NO_INSTANCE_ERROR)
+    if (!defaultInstance) throw new Error(NO_INSTANCE_ERROR);
 
-    defaultInstance.setPushRegistrationId(token)
+    defaultInstance.setPushRegistrationId(token);
   },
 
   // android only
   clearPushRegistrationId(token?: string) {
-    if (!defaultInstance) throw new Error(NO_INSTANCE_ERROR)
+    if (!defaultInstance) throw new Error(NO_INSTANCE_ERROR);
 
-    defaultInstance.clearPushRegistrationId(token)
+    defaultInstance.clearPushRegistrationId(token);
   },
 
   reset() {
-    if (!defaultInstance) throw new Error(NO_INSTANCE_ERROR)
+    if (!defaultInstance) throw new Error(NO_INSTANCE_ERROR);
 
-    defaultInstance.reset()
+    defaultInstance.reset();
   },
 
   showInAppMessageIfAvailable() {
-    if (!defaultInstance) throw new Error(NO_INSTANCE_ERROR)
-    defaultInstance.showInAppMessageIfAvailable(token)
+    if (!defaultInstance) throw new Error(NO_INSTANCE_ERROR);
+    defaultInstance.showInAppMessageIfAvailable(token);
   },
 
   optInTracking() {
-    if (!defaultInstance) throw new Error(NO_INSTANCE_ERROR)
+    if (!defaultInstance) throw new Error(NO_INSTANCE_ERROR);
 
-    defaultInstance.optInTracking()
+    defaultInstance.optInTracking();
   },
 
   optOutTracking() {
-    if (!defaultInstance) throw new Error(NO_INSTANCE_ERROR)
+    if (!defaultInstance) throw new Error(NO_INSTANCE_ERROR);
 
-    defaultInstance.optOutTracking()
-  },
-}
+    defaultInstance.optOutTracking();
+  }
+};
